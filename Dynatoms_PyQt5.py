@@ -1,9 +1,9 @@
 import sys
 import os
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import Qt, QtCore
 import vtk
-from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 import math
 import numpy as np
@@ -21,7 +21,7 @@ rads_arr = np.array(list(itertools.zip_longest(*rads, fillvalue=0))).T #Fills in
 rads_ref = dict(zip(rads_arr[:,1],rads_arr[:,2]))
 
 def run():
-	app = QtGui.QApplication(sys.argv)
+	app = Qt.QApplication(sys.argv)
 	GUI = Window()
 	sys.exit(app.exec_())
 
@@ -65,38 +65,38 @@ class MouseInteractorHighLightActor(vtk.vtkInteractorStyleTrackballCamera):
 		self.OnLeftButtonDown()
 		return
 
-class Window(QtGui.QMainWindow):
+class Window(Qt.QMainWindow):
 
 	def __init__(self):
 		super(Window, self).__init__()
-		QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('Cleanlooks'))
+		Qt.QApplication.setStyle(Qt.QStyleFactory.create('Fusion'))
 
 #		self.statusBar() #Function on window to add status bar
 		mainMenu = self.menuBar() #Top menu bar
 
 		fileMenu = mainMenu.addMenu('&File')
 		importtip = 'Accepts most widely used chemical file formats'
-		self.importact = QtGui.QAction('Import Molecule', self)
+		self.importact = Qt.QAction('Import Molecule', self)
 		self.build_action(self.importact,importtip,self.open_file,'Ctrl+O')
 		fileMenu.addAction(self.importact)
 		exporttip = 'Save under a specific filepath'
-		self.exportact = QtGui.QAction('Export STL', self)
+		self.exportact = Qt.QAction('Export STL', self)
 		self.build_action(self.exportact,exporttip,self.save_file,'Ctrl+Shift+S')
 		fileMenu.addAction(self.exportact)
 		fileMenu.addSeparator()
 		quittip = 'Leave the application'
-		self.quitact = QtGui.QAction('Quit', self)
+		self.quitact = Qt.QAction('Quit', self)
 		self.build_action(self.quitact,quittip,self.close_application,'Ctrl+Q')
 		fileMenu.addAction(self.quitact)
 
 		editMenu = mainMenu.addMenu('&Edit')
 		addjointtip = 'Place a joint on selected bond'
-		self.addjointact = QtGui.QAction('Add Joint to Selected', self)
+		self.addjointact = Qt.QAction('Add Joint to Selected', self)
 		self.build_action(self.addjointact,addjointtip,self.place_joint,'Ctrl+B')
 		self.addjointact.setDisabled(True)
 		editMenu.addAction(self.addjointact)
 		removejointtip = 'Remove a joint on selected bond'
-		self.removejointact = QtGui.QAction('Remove Joint from Selected', self)
+		self.removejointact = Qt.QAction('Remove Joint from Selected', self)
 		self.build_action(self.removejointact,removejointtip,self.remove_joint,'Del')
 		editMenu.addAction(self.removejointact)
 
@@ -105,7 +105,7 @@ class Window(QtGui.QMainWindow):
 
 		helpMenu = mainMenu.addMenu('Help')
 		abouttip = 'Credits and attributions'
-		self.aboutact = QtGui.QAction('About', self)
+		self.aboutact = Qt.QAction('About', self)
 		self.build_action(self.aboutact,abouttip,self.about_trigger)
 		helpMenu.addAction(self.aboutact)
 
@@ -128,42 +128,42 @@ class Window(QtGui.QMainWindow):
 
 		self.setGeometry(50, 50, 1500, 900)
 		self.setWindowTitle("Dynatoms")
-		self.setWindowIcon(QtGui.QIcon('Dynatoms.png'))
+		self.setWindowIcon(Qt.QIcon('Dynatoms.png'))
 
-		splitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+		splitter = Qt.QSplitter(QtCore.Qt.Horizontal)
 
-		sidebar = QtGui.QVBoxLayout()
+		sidebar = Qt.QVBoxLayout()
 		sidebar.setAlignment(QtCore.Qt.AlignTop)
-		sidebarwid = QtGui.QWidget() #Create widget to add to splitter
+		sidebarwid = Qt.QWidget() #Create widget to add to splitter
 		sidebarwid.setLayout(sidebar)
 
-		jointcbox = QtGui.QCheckBox('Include Joint', self)
+		jointcbox = Qt.QCheckBox('Include Joint', self)
 		sidebar.addWidget(jointcbox)
 		jointcbox.resize(jointcbox.sizeHint())
 		jointcbox.stateChanged.connect(self.jointcbox_toggle)
 		jointcbox.toggle() #Default is on
 
-		comboBox = QtGui.QComboBox(self)
+		comboBox = Qt.QComboBox(self)
 		comboBox.addItem("T-Spin Joint")
 		comboBox.addItem("Ball Joint")
 		comboBox.resize(comboBox.sizeHint())
 		sidebar.addWidget(comboBox)
 		comboBox.activated[str].connect(self.joint_picker)
 
-		self.stlrenderbtn = QtGui.QPushButton("Render STL", self)
+		self.stlrenderbtn = Qt.QPushButton("Render STL", self)
 		self.stlrenderbtn.setEnabled(False)
 		self.stlrenderbtn.clicked.connect(self.gen_stl)
 		self.stlrenderbtn.resize(self.stlrenderbtn.sizeHint())
 		sidebar.addWidget(self.stlrenderbtn)
 
-		jointplacebtn = QtGui.QPushButton("Place Joint Here", self)
+		jointplacebtn = Qt.QPushButton("Place Joint Here", self)
 		jointplacebtn.clicked.connect(self.place_joint)
 		jointplacebtn.resize(jointplacebtn.sizeHint())
 		sidebar.addWidget(jointplacebtn)
 
-		self.vtkframe = QtGui.QFrame()
+		self.vtkframe = Qt.QFrame()
 		self.vtkWidget = QVTKRenderWindowInteractor(self.vtkframe)
-		container = QtGui.QHBoxLayout()
+		container = Qt.QHBoxLayout()
 		container.addWidget(self.vtkWidget)
 
 		self.renderer = vtk.vtkRenderer()
@@ -251,11 +251,10 @@ class Window(QtGui.QMainWindow):
 		stlWriter.Write()
 
 	def save_file(self):
-		savePath = QtGui.QFileDialog.getSaveFileName(self,'Save File', '/')
+		savePath = Qt.QFileDialog.getSaveFileName(self,'Save File', '/')
 
 	def open_file(self):
-		openPath = QtGui.QFileDialog.getOpenFileName(self,'Open File', '/')
-
+		openPath = Qt.QFileDialog.getOpenFileName(self,'Open File', '/')
 		extension = os.path.splitext(openPath)[1][1:]
 		if extension == "mol":
 			self.types, rawcoords, self.bonded = open_mol_format(openPath)
@@ -339,10 +338,10 @@ class Window(QtGui.QMainWindow):
 		print('Placeholder')
 
 	def close_application(self):
-		choice = QtGui.QMessageBox.question(self, 'Dynatoms', 'Close without saving?', QtGui.QMessageBox.Save | QtGui.QMessageBox.Discard | QtGui.QMessageBox.Cancel)
-		if choice == QtGui.QMessageBox.Discard:
+		choice = Qt.QMessageBox.question(self, 'Dynatoms', 'Close without saving?', Qt.QMessageBox.Save | Qt.QMessageBox.Discard | Qt.QMessageBox.Cancel)
+		if choice == Qt.QMessageBox.Discard:
 			sys.exit()
-		elif choice  == QtGui.QMessageBox.Save:
+		elif choice  == Qt.QMessageBox.Save:
 			self.save_file()
 		else:
 			pass
