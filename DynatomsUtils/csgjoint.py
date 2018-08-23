@@ -8,15 +8,15 @@ def csgTSpin(rad,len,tolerance,scaling,detail):
     """
     Generates a T-spin joint using the constructive solid geometry (csg) library pycsg.
     ---- ----    Top disk
-       | |       Top tube/Top height
+       | |       Top tube (Height is 'topheight')
      --- ---     Mid disk
-     |     |     Bottom tube/Bot height
+     |     |     Bottom tube (Height is 'botheight')
      -------     Bottom disk
     Horizontal axes are scaled with the joint scaling factor (relative to r). Vertical
     axes are not (relative to rad).
     """
     r = rad*scaling
-    botheight, topheight = 0.4*rad, 0.3*rad
+    botheight, topheight = 0.4*rad, 0.3*rad #Need these two quantities to place visualization later.
     height = botheight+topheight
     bottom = -(height/2)
 

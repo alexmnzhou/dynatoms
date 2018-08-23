@@ -9,13 +9,10 @@ import math
 import numpy as np
 import itertools
 
-from DynatomsUtils import csgjoint
-from DynatomsUtils import vtkmath
+from DynatomsUtils import csgjoint, vtkmath, highlighter
 from DynatomsUtils.chemio import open_mol_format
 
-version = '0.1.0'
-
-radf = open('radii.txt') #Used to determine atom size based on element
+radf = open('Resources/radii.txt') #Used to determine atom size based on element
 rads = list(map(str.split, radf))
 rads_arr = np.array(list(itertools.zip_longest(*rads, fillvalue=0))).T #Fills in missing data with 0s to preserve dimensionality
 rads_ref = dict(zip(rads_arr[:,1],rads_arr[:,2]))
@@ -24,46 +21,6 @@ def run():
 	app = Qt.QApplication(sys.argv)
 	GUI = Window()
 	sys.exit(app.exec_())
-
-class MouseInteractorHighLightActor(vtk.vtkInteractorStyleTrackballCamera):
-
-	def __init__(self, renderupdatefunc, parent=None):
-		self.AddObserver("LeftButtonPressEvent", self.leftButtonPressEvent)
-		self.LastPickedActor = None
-		self.buttonupdate = renderupdatefunc
-
-	def leftButtonPressEvent(self, obj, event):
-		global pickedActor
-		global pickedActorIndex
-
-		clickPos = self.GetInteractor().GetEventPosition()
-		picker = vtk.vtkPropPicker()
-		picker.Pick(clickPos[0], clickPos[1], 0, self.GetDefaultRenderer())
-		self.NewPickedActor = picker.GetActor() # get the new
-		if self.NewPickedActor: # If something was selected
-
-    		# Highlight/unhighlight the picked actor by changing its properties
-			if self.LastPickedActor == self.NewPickedActor:
-				if self.NewPickedActor.GetProperty().GetColor() == (1.0,0.0,0.0):
-					self.NewPickedActor.GetProperty().SetColor(1.0,1.0,1.0)
-					self.buttonupdate(False)
-				else:
-					self.NewPickedActor.GetProperty().SetColor(1.0,0.0,0.0)
-					pickedActorIndex = int(self.NewPickedActor.GetProperty().GetSpecularPower())
-					pickedActor = self.NewPickedActor
-					self.buttonupdate(True)
-			else:
-				self.NewPickedActor.GetProperty().SetColor(1.0, 0.0, 0.0)
-				pickedActorIndex = int(self.NewPickedActor.GetProperty().GetSpecularPower())
-				pickedActor = self.NewPickedActor
-				self.buttonupdate(True)
-				if self.LastPickedActor != None: #If NewPickedActor is not the first selection, unhighlight the last selection made
-					self.LastPickedActor.GetProperty().SetColor(1.0,1.0,1.0)
-
-            # save the last picked actor
-			self.LastPickedActor = self.NewPickedActor
-		self.OnLeftButtonDown()
-		return
 
 class Window(Qt.QMainWindow):
 
@@ -128,7 +85,7 @@ class Window(Qt.QMainWindow):
 
 		self.setGeometry(50, 50, 1500, 900)
 		self.setWindowTitle("Dynatoms")
-		self.setWindowIcon(Qt.QIcon('Dynatoms.png'))
+		self.setWindowIcon(Qt.QIcon('Resources/Icons/Dynatoms.png'))
 
 		splitter = Qt.QSplitter(QtCore.Qt.Horizontal)
 
@@ -148,7 +105,7 @@ class Window(Qt.QMainWindow):
 		comboBox.addItem("Ball Joint")
 		comboBox.resize(comboBox.sizeHint())
 		sidebar.addWidget(comboBox)
-		comboBox.activated[str].connect(self.joint_picker)
+		comboBox.activated[str].connect(self.joint_type)
 
 		self.stlrenderbtn = Qt.QPushButton("Render STL", self)
 		self.stlrenderbtn.setEnabled(False)
@@ -171,7 +128,7 @@ class Window(Qt.QMainWindow):
 		self.vtkWidget.GetRenderWindow().AddRenderer(self.renderer)
 		self.interactor = self.vtkWidget.GetRenderWindow().GetInteractor()
 
-		self.style = MouseInteractorHighLightActor(self.render_update)
+		self.style = highlighter.MouseInteractorHighLightActor(self.picked_update)
 		self.style.SetDefaultRenderer(self.renderer)
 		self.vtkWidget.SetInteractorStyle(self.style)
 
@@ -185,11 +142,13 @@ class Window(Qt.QMainWindow):
 		self.show()
 		self.interactor.ReInitialize()
 
-	def render_update(self, selected): #For disabling render options when nothing is selected
-		self.stlrenderbtn.setEnabled(selected) #Selected is a boolean
-		self.addjointact.setEnabled(selected)
+	def picked_update(self, is_selected, picked, pickedIndex): #For selecting bonds and disabling render options when nothing is selected
+		self.stlrenderbtn.setEnabled(is_selected) #is_selected is a boolean
+		self.addjointact.setEnabled(is_selected)
+		self.pickedActor = picked
+		self.pickedActorIndex = pickedIndex #pickedIndex is an integer
 
-	def joint_picker(self, text):
+	def joint_type(self, text):
 		joint_choice = text
 		print(joint_choice)
 
@@ -200,19 +159,21 @@ class Window(Qt.QMainWindow):
 			print("Not checked")
 
 	def place_joint(self):
-		joint, botheight, topheight = csgjoint.csgTSpin(self.scaling*self.bond_scaling*0.42, self.bond_lens[pickedActorIndex], 0.2, self.joint_scaling, self.SEGMENTS)
+		joint, botheight, topheight = csgjoint.csgTSpin(self.scaling*self.bond_scaling*0.42,
+		                                                self.bond_lens[self.pickedActorIndex],
+														0.2, self.joint_scaling,
+														self.SEGMENTS*2)
 		self.draw_joint(joint, botheight, topheight)
 
 	def draw_joint(self, joint, botheight, topheight):
-
-		self.renderer.RemoveActor(pickedActor)
+		self.renderer.RemoveActor(self.pickedActor)
 
 		jtransform = vtk.vtkTransform()
 		jtransform.PostMultiply() #To perform transforms in correct order (x->y->z->translate)
 		jtransform.RotateX(90)
-		jtransform.RotateY(self.bond_angs[pickedActorIndex][1])
-		jtransform.RotateZ(self.bond_angs[pickedActorIndex][2])
-		jtransform.Translate(*self.bond_locs[pickedActorIndex])
+		jtransform.RotateY(self.bond_angs[self.pickedActorIndex][1])
+		jtransform.RotateZ(self.bond_angs[self.pickedActorIndex][2])
+		jtransform.Translate(*self.bond_locs[self.pickedActorIndex])
 		jtransformFilter = vtk.vtkTransformPolyDataFilter()
 		jtransformFilter.SetTransform(jtransform)
 		jtransformFilter.SetInputData(joint)
@@ -225,7 +186,7 @@ class Window(Qt.QMainWindow):
 
 		j_actor.GetProperty().SetSpecular(0.1)
 		j_actor.GetProperty().SetSpecularColor(1.0, 1.0, 1.0)
-		j_actor.GetProperty().SetSpecularPower(pickedActorIndex) #Used as a quasi-indexer
+		j_actor.GetProperty().SetSpecularPower(self.pickedActorIndex) #Used as a quasi-indexer
 
 		self.renderer.AddActor(j_actor)
 		self.interactor.Initialize()
@@ -254,7 +215,7 @@ class Window(Qt.QMainWindow):
 		savePath = Qt.QFileDialog.getSaveFileName(self,'Save File', '/')
 
 	def open_file(self):
-		openPath = Qt.QFileDialog.getOpenFileName(self,'Open File', '/')
+		openPath = Qt.QFileDialog.getOpenFileName(self,'Open File', '/')[0]
 		extension = os.path.splitext(openPath)[1][1:]
 		if extension == "mol":
 			self.types, rawcoords, self.bonded = open_mol_format(openPath)
@@ -347,3 +308,4 @@ class Window(Qt.QMainWindow):
 			pass
 
 run()
+%tb
