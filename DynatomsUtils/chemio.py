@@ -1,4 +1,5 @@
 import numpy as np
+import CifFile
 
 def open_mol_format(filepath):
 	f = open(filepath)
@@ -8,7 +9,7 @@ def open_mol_format(filepath):
 	        if list(arr[i][-1])[0] == 'V': #Uses molfile version indicator to locate counts line
 	            cts = i
 	            break
-	head = cts+1 #number of lines in the header; must be skipped to read data
+	head = cts+1 #total number of lines in the header; must be skipped to read data
 	atoms = []
 	for i in range(len(arr[head:])):
 	    aindex = i+head

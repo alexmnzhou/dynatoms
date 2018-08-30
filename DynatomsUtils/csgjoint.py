@@ -1,8 +1,5 @@
 from csg.core import CSG
-import vtk
-import numpy as np
-import itertools
-from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+from DynatomsUtils.vtkmath import csgtovtk
 
 def csgTSpin(rad,len,tolerance,scaling,detail):
     """
@@ -12,7 +9,7 @@ def csgTSpin(rad,len,tolerance,scaling,detail):
      --- ---     Mid disk
      |     |     Bottom tube (Height is 'botheight')
      -------     Bottom disk
-    Horizontal axes are scaled with the joint scaling factor (relative to r). Vertical
+    Horizontal axes are scaled with the joint width scaling factor (relative to r). Vertical
     axes are not (relative to rad).
     """
     r = rad*scaling
@@ -21,7 +18,7 @@ def csgTSpin(rad,len,tolerance,scaling,detail):
     bottom = -(height/2)
 
     bottomdisk = CSG.cylinder(radius = 0.8*r+tolerance/2, start = [0,bottom-tolerance/2,0],
-                 end = [0,bottom+tolerance/2], slices = detail)
+                 end = [0,bottom+tolerance/2,0], slices = detail)
 
     bottomtube = CSG.cylinder(radius = 0.8*r+tolerance/2, start = [0,bottom,0],
                  end = [0,botheight,0], slices = detail) \
@@ -47,20 +44,4 @@ def csgTSpin(rad,len,tolerance,scaling,detail):
     minusjoint = bottomdisk + bottomtube + middisk + toptube + topdisk
     joint = bond-minusjoint
 
-    return(csgtoVTK(joint), botheight, topheight)
-
-def csgtoVTK(geom):
-    verts,polys,count = geom.toVerticesAndPolygons()
-
-    points = vtk.vtkPoints()
-    points.SetData(numpy_to_vtk(verts))
-
-    cellArray = vtk.vtkCellArray()
-    cells = np.array(tuple(itertools.chain.from_iterable([[len(poly)]+poly for poly in polys])), dtype = np.int64)
-    cellArray.SetCells(count,numpy_to_vtkIdTypeArray(cells))
-
-    polydata = vtk.vtkPolyData()
-    polydata.SetPoints(points)
-    polydata.SetPolys(cellArray)
-
-    return polydata
+    return(csgtovtk(joint), botheight, topheight)

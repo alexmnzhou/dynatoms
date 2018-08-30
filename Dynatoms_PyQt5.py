@@ -28,7 +28,7 @@ class Window(Qt.QMainWindow):
 		super(Window, self).__init__()
 		Qt.QApplication.setStyle(Qt.QStyleFactory.create('Fusion'))
 
-#		self.statusBar() #Function on window to add status bar
+		self.statusBar() #Function on window to add status bar
 		mainMenu = self.menuBar() #Top menu bar
 
 		fileMenu = mainMenu.addMenu('&File')
@@ -40,6 +40,7 @@ class Window(Qt.QMainWindow):
 		self.exportact = Qt.QAction('Export STL', self)
 		self.build_action(self.exportact,exporttip,self.save_file,'Ctrl+Shift+S')
 		fileMenu.addAction(self.exportact)
+		self.exportact.setDisabled(True)
 		fileMenu.addSeparator()
 		quittip = 'Leave the application'
 		self.quitact = Qt.QAction('Quit', self)
@@ -47,11 +48,11 @@ class Window(Qt.QMainWindow):
 		fileMenu.addAction(self.quitact)
 
 		editMenu = mainMenu.addMenu('&Edit')
-		addjointtip = 'Place a joint on selected bond'
-		self.addjointact = Qt.QAction('Add Joint to Selected', self)
-		self.build_action(self.addjointact,addjointtip,self.place_joint,'Ctrl+B')
-		self.addjointact.setDisabled(True)
-		editMenu.addAction(self.addjointact)
+		placejointtip = 'Place a joint on selected bond'
+		self.placejointact = Qt.QAction('Add Joint to Selected', self)
+		self.build_action(self.placejointact,placejointtip,self.place_joint,'Ctrl+B')
+		self.placejointact.setDisabled(True)
+		editMenu.addAction(self.placejointact)
 		removejointtip = 'Remove a joint on selected bond'
 		self.removejointact = Qt.QAction('Remove Joint from Selected', self)
 		self.build_action(self.removejointact,removejointtip,self.remove_joint,'Del')
@@ -59,6 +60,10 @@ class Window(Qt.QMainWindow):
 
 		viewMenu = mainMenu.addMenu('&View')
 		themeMenu = viewMenu.addMenu('&Theme')
+		defaultthemetip = 'Default blue and white theme'
+		self.defaultthemeact = Qt.QAction('Default', self)
+		self.build_action(self.defaultthemeact,defaultthemetip,self.themer)
+		themeMenu.addAction(self.defaultthemeact)
 
 		helpMenu = mainMenu.addMenu('Help')
 		abouttip = 'Credits and attributions'
@@ -66,7 +71,6 @@ class Window(Qt.QMainWindow):
 		self.build_action(self.aboutact,abouttip,self.about_trigger)
 		helpMenu.addAction(self.aboutact)
 
-		self.include_joint = False
 		self.SEGMENTS = 12
 
 		self.home()
@@ -94,12 +98,6 @@ class Window(Qt.QMainWindow):
 		sidebarwid = Qt.QWidget() #Create widget to add to splitter
 		sidebarwid.setLayout(sidebar)
 
-		jointcbox = Qt.QCheckBox('Include Joint', self)
-		sidebar.addWidget(jointcbox)
-		jointcbox.resize(jointcbox.sizeHint())
-		jointcbox.stateChanged.connect(self.jointcbox_toggle)
-		jointcbox.toggle() #Default is on
-
 		comboBox = Qt.QComboBox(self)
 		comboBox.addItem("T-Spin Joint")
 		comboBox.addItem("Ball Joint")
@@ -108,15 +106,15 @@ class Window(Qt.QMainWindow):
 		comboBox.activated[str].connect(self.joint_type)
 
 		self.stlrenderbtn = Qt.QPushButton("Render STL", self)
-		self.stlrenderbtn.setEnabled(False)
 		self.stlrenderbtn.clicked.connect(self.gen_stl)
 		self.stlrenderbtn.resize(self.stlrenderbtn.sizeHint())
 		sidebar.addWidget(self.stlrenderbtn)
 
-		jointplacebtn = Qt.QPushButton("Place Joint Here", self)
-		jointplacebtn.clicked.connect(self.place_joint)
-		jointplacebtn.resize(jointplacebtn.sizeHint())
-		sidebar.addWidget(jointplacebtn)
+		self.jointplacebtn = Qt.QPushButton("Place Joint Here", self)
+		self.jointplacebtn.setDisabled(True) #Shouldn't be able to place joint unless a bond is selected
+		self.jointplacebtn.clicked.connect(self.place_joint)
+		self.jointplacebtn.resize(self.jointplacebtn.sizeHint())
+		sidebar.addWidget(self.jointplacebtn)
 
 		self.vtkframe = Qt.QFrame()
 		self.vtkWidget = QVTKRenderWindowInteractor(self.vtkframe)
@@ -142,21 +140,18 @@ class Window(Qt.QMainWindow):
 		self.show()
 		self.interactor.ReInitialize()
 
-	def picked_update(self, is_selected, picked, pickedIndex): #For selecting bonds and disabling render options when nothing is selected
-		self.stlrenderbtn.setEnabled(is_selected) #is_selected is a boolean
-		self.addjointact.setEnabled(is_selected)
+	def picked_update(self, is_selected, picked, pickedIndex): #For disabling render options when nothing is selected
+		self.jointplacebtn.setEnabled(is_selected) #is_selected is a boolean
+		self.placejointact.setEnabled(is_selected)
 		self.pickedActor = picked
 		self.pickedActorIndex = pickedIndex #pickedIndex is an integer
+
+	def rendered_update(self, is_rendered): #For disabling saving when nothing is rendered
+		self.exportact.setEnabled(is_rendered)
 
 	def joint_type(self, text):
 		joint_choice = text
 		print(joint_choice)
-
-	def jointcbox_toggle(self, state):
-		if state == QtCore.Qt.Checked:
-			print("Checked")
-		else:
-			print("Not checked")
 
 	def place_joint(self):
 		joint, botheight, topheight = csgjoint.csgTSpin(self.scaling*self.bond_scaling*0.42,
@@ -188,28 +183,23 @@ class Window(Qt.QMainWindow):
 		j_actor.GetProperty().SetSpecularColor(1.0, 1.0, 1.0)
 		j_actor.GetProperty().SetSpecularPower(self.pickedActorIndex) #Used as a quasi-indexer
 
+		self.jointplacebtn.setEnabled(False) #Turn off until new bond is selected
 		self.renderer.AddActor(j_actor)
 		self.interactor.Initialize()
+
+	def themer(self, theme):
+		theme_dict = {"default": ((1, 1, 1), (0.3, 0.4, 0.5))}
 
 	def remove_joint(self):
 		print("Placeholder 2")
 
 	def gen_stl(self):
-	#	self.renderer.RemoveAllViewProps()
-	#	self.renderer.Clear()
-
-		self.modelPolyData = vtk.vtkAppendPolyData()
 		actors = self.renderer.GetActors()
 		actors.InitTraversal()
+		self.unionPolyData = vtk.vtkAppendPolyData()
 		for i in range(actors.GetNumberOfItems()):
-			actor = actors.GetNextActor()
-			self.modelPolyData.AddInputData(actor.GetMapper().GetInput())
-		self.modelPolyData.Update()
-
-		stlWriter = vtk.vtkSTLWriter()
-		stlWriter.SetFileName("test.stl")
-		stlWriter.SetInputConnection(self.modelPolyData.GetOutputPort())
-		stlWriter.Write()
+			self.unionPolyData.AddInputData(actors.GetNextActor().GetMapper().GetInput())
+		self.unionPolyData.Update()
 
 	def save_file(self):
 		savePath = Qt.QFileDialog.getSaveFileName(self,'Save File', '/')
@@ -308,4 +298,3 @@ class Window(Qt.QMainWindow):
 			pass
 
 run()
-%tb
