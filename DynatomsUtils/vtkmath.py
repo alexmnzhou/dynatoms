@@ -30,7 +30,6 @@ def csgtovtk(geom):
 	points.SetData(numpy_to_vtk(verts))
 
 	cellArray = vtk.vtkCellArray()
-	s1 = time.clock()
 	cells = np.array(tuple(itertools.chain.from_iterable([[len(poly)]+poly for poly in polys])),
 	                 dtype = np.int64)
 
