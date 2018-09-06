@@ -19,16 +19,27 @@ rads_ref = dict(zip(rads_arr[:,1],rads_arr[:,2]))
 
 def run():
 	app = Qt.QApplication(sys.argv)
-	GUI = Window()
+	GUI = DynatomsApplication()
 	sys.exit(app.exec_())
 
-class Window(Qt.QMainWindow):
+class DynatomsApplication(Qt.QMainWindow):
 
 	def __init__(self):
-		super(Window, self).__init__()
+		super(Window, self).__init__() #Initiate parent class
+
 		Qt.QApplication.setStyle(Qt.QStyleFactory.create('Fusion'))
 
-		self.statusBar() #Function on window to add status bar
+		self.statusBar() #Add status bar using QMainWindow function
+		self.build_menu()
+		self.home()
+
+	def build_action(self, action, tooltip, trigger, shortcut = None):
+		action.setStatusTip(tooltip)
+		action.triggered.connect(trigger)
+		if shortcut != None:
+			action.setShortcut(shortcut)
+
+	def build_menu(self):
 		mainMenu = self.menuBar() #Top menu bar
 
 		fileMenu = mainMenu.addMenu('&File')
@@ -71,17 +82,8 @@ class Window(Qt.QMainWindow):
 		self.build_action(self.aboutact,abouttip,self.about_trigger)
 		helpMenu.addAction(self.aboutact)
 
-		self.SEGMENTS = 12
-
-		self.home()
-
-	def build_action(self, action, tooltip, trigger, shortcut = None):
-		action.setStatusTip(tooltip)
-		action.triggered.connect(trigger)
-		if shortcut != None:
-			action.setShortcut(shortcut)
-
 	def home(self):
+		self.SEGMENTS = 12
 		self.scaling = 8
 		self.bond_scaling = 1
 		self.joint_scaling = 1.2
