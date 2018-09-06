@@ -1,5 +1,5 @@
 import numpy as np
-import CifFile
+import pybel
 
 def open_mol_format(filepath):
 	f = open(filepath)
@@ -31,3 +31,7 @@ def open_mol_format(filepath):
 	coords = np.array(atoms[:,:3],dtype = 'float')
 	bonded = np.array(bonds[:,:2],dtype = 'int')
 	return(types,coords,bonded)
+
+ob_log_handler = pybel.ob.OBMessageHandler()
+ob_log_handler.SetOutputLevel(0) #Disable non-critical warnings
+mol = next(pybel.readfile("cif","Examples/Molecules/HEBGAX.cif"))

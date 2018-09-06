@@ -4,7 +4,6 @@ import itertools
 import time
 
 import vtk
-import vtkInterface as vtki
 from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
 
 from csg.core import CSG

@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+# Dynatoms is released under the terms of the GPLv3 or higher.
+
 import sys
 import os
 
