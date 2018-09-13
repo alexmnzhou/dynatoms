@@ -1,5 +1,5 @@
 from csg.core import CSG
-from DynatomsUtils.vtkmath import csgtovtk
+from dynatoms.vtkmath import csgtovtk
 
 def csgTSpin(rad,len,tolerance,scaling,detail):
     """
