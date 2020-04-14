@@ -1,5 +1,7 @@
 # Dynatoms Introduction
 
+![Dynatoms logo](https://ibb.co/pRwvmNL)
+
 Molecular model kits are an awesome, tactile way to visualize chemicals. However, standard kit implementations fall short of modern research and higher-educational applications in a number of important ways:
 
 1. Each molecule has to be assembled *by hand* (and later taken apart when the pieces need to be reused). Assembly can be prohibitively time-consuming and costly as molecular geometries increase in complexity.
@@ -12,15 +14,17 @@ A number of protocols have been published to demonstrate the effectiveness of 3D
 
 ## Features
 
+![Dynatoms interface](https://ibb.co/ggMm5PG)
+
 **Dynamic Joints**
 
 Dynatoms can function as a simple model generator that takes in the most common chemical file formats (.pdb, .mol, .cif) and outputs a 3D printing-ready solid model file (.stl), but many chemical software suites have this functionality built in.
-The main contribution of Dynatoms lies in its parametric, entirely 3D printed joints! So far, there are two designs:
+The main contribution of Dynatoms lies in its parametric, entirely 3D printed joints! So far, there are two designs: a rotating cylindrical joint and a ball joint.
 
-[placeholder gif for wow-factor]
+Simply select a joint loaded from an xyz, cif, or pdb file and press the "Place Joint Here" button on the sidebar. This will attempt to remove the joint and render a default cylindrical joint and then rotate the entire part to make the joint horizontal with the surface to optimize printing.
+
+Clicking "Render STL" will attempt to generate a 3D model STL file from what is on screen ready for slicing and 3D printing.
 
 **Customization**
 
-Dynatoms has a number of settings to tinker with to get the molecular model you want.
-
-## Installation
+Dynatoms has a number of settings to tinker with to get the molecular model you want. Change relative ball/model size, scaling factor (relative to atomic weight), or colors. By default, sphere size is set to the Van Der Waals radius with extremely heavy atoms scaled downwards.
