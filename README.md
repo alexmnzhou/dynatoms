@@ -1,6 +1,6 @@
 # Dynatoms Introduction
 
-![Dynatoms logo](https://ibb.co/pRwvmNL)
+![Dynatoms logo](https://i.ibb.co/rc0GWqw/Dynatoms.png)
 
 Molecular model kits are an awesome, tactile way to visualize chemicals. However, standard kit implementations fall short of modern research and higher-educational applications in a number of important ways:
 
@@ -14,7 +14,7 @@ A number of protocols have been published to demonstrate the effectiveness of 3D
 
 ## Features
 
-![Dynatoms interface](https://ibb.co/ggMm5PG)
+![Dynatoms interface](https://i.ibb.co/ryGFCcg/Screen-Shot-2020-04-13-at-11-05-46-PM.png)
 
 **Dynamic Joints**
 
