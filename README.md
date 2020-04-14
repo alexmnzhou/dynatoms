@@ -1,6 +1,5 @@
 # Dynatoms Introduction
-
-![Dynatoms logo](https://i.ibb.co/rc0GWqw/Dynatoms.png)
+<img src="https://i.ibb.co/rc0GWqw/Dynatoms.png" alt="Dynatoms logo" width="100" height="100">
 
 Molecular model kits are an awesome, tactile way to visualize chemicals. However, standard kit implementations fall short of modern research and higher-educational applications in a number of important ways:
 
